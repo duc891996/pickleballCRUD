@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Báo Giá Pickle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #fff;
+            width: 500px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            color: #004d31;
+        }
+
+        .logo-box {
+            background-color: #004d31;
+            color: #ccff00;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px auto;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid #fff;
+        }
+
+        .section-title {
+            color: #004d31;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-top: 20px;
+        }
+
+        .info-p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .details {
+            font-size: 13px;
+            color: #004d31;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th {
+            text-align: left;
+            border-bottom: 2px solid #eee;
+            padding: 10px 0;
+            color: #004d31;
+        }
+
+        td {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .total-box {
+            text-align: right;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        .grand-total {
+            font-size: 18px;
+            color: #004d31;
+            margin-top: 5px;
+        }
+
+        .footer-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 30px;
+        }
+
+        /* Style mới cho ảnh QR */
+        .qr-image {
+            width: 130px;
+            height: auto;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 5px;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Adjust Control Panel for Modal */
+        .control-panel {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+            border-radius: 0;
+            display: flex;
+            flex-direction: column;
+            /* Stack vertically in modal */
+            gap: 15px;
+            align-items: stretch;
+        }
+
+        .control-panel .form-group {
+            width: 100%;
+        }
+
+        .control-panel .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .btn {
+            padding: 9px 15px;
+            background-color: #004d31;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background-color: #003824;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .editable {
+            border: 1px dashed transparent;
+            padding: 2px;
+            transition: all 0.2s;
+        }
+
+        .editable:hover,
+        .editable:focus {
+            border-color: #aaa;
+            background: #fff;
+            outline: none;
+        }
+
+        @media print {
+
+            .control-panel,
+            .btn-danger,
+            .no-print,
+            .modal,
+            .open-modal-btn {
+                display: none !important;
+            }
+
+            .container {
+                box-shadow: none;
+                border: none;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            body {
+                background-color: #fff;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2 style="margin: 0;">Bảng Báo Giá</h2>
+            <h3 style="margin: 10px 0;">Quần Ngựa Pickleball</h3>
+            <div class="logo-box">
+                QUẦN NGỰA PICKLEBALL<br>55A Đốc Ngữ, Ba Đình, Hà Nội
+            </div>
+        </div>
+
+        <div class="info-section">
+            <p class="info-p"><strong>Chi nhánh:</strong> <span class="editable" contenteditable="true"
+                    id="branch-name">Quần Ngựa Pickleball</span></p>
+            <p class="info-p"><strong>Số điện thoại:</strong> <span class="editable" contenteditable="true"
+                    id="branch-phone">0923031919</span></p>
+            <p class="info-p"><strong>Địa chỉ:</strong> <span class="editable" contenteditable="true"
+                    id="branch-address">55A Đốc Ngữ, Ba Đình, Hà Nội</span></p>
+
+            <h4 class="section-title">Thông tin khách hàng</h4>
+            <p class="info-p"><strong>Khách hàng:</strong> <span class="editable" contenteditable="true"
+                    id="cust-name">A Tuấn PCT</span></p>
+            <p class="info-p"><strong>Số điện thoại:</strong> <span class="editable" contenteditable="true"
+                    id="cust-phone">0901452278</span></p>
+            <div class="details">
+            </div>
+        </div>
+
+        <!-- Button to Open Modal -->
+        <button class="btn open-modal-btn no-print" onclick="openModal()" style="margin-bottom: 10px;">+ Thêm
+            dòng</button>
+
+        <!-- The Modal -->
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal" onclick="closeModal()">&times;</span>
+                <h3 style="margin-top: 0; text-align: center; color: #004d31;">Thêm / Cập Nhật Dịch Vụ</h3>
+
+                <div class="control-panel">
+                    <div class="form-group">
+                        <label>Ngày (DD/MM/YYYY)</label>
+                        <input type="text" id="input-date" placeholder="VD: 01/01/2025">
+                    </div>
+                    <div class="form-group">
+                        <label>Khung giờ</label>
+                        <input type="text" id="input-timerange" placeholder="VD: 17h-19h">
+                    </div>
+                    <div class="form-group">
+                        <label>Dịch vụ</label>
+                        <input type="text" id="input-service" value="Sân 1" placeholder="Sân 1">
+                    </div>
+                    <div class="form-group">
+                        <label>Đơn giá</label>
+                        <input type="number" id="input-price" value="200000" step="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>Số lượng (Giờ)</label>
+                        <input type="number" id="input-quantity" value="1" step="0.5">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn" style="background-color: #6c757d;" onclick="clearForm()">Xóa trắng</button>
+                        <button class="btn" onclick="upsertItem()">Lưu</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>T.Gian</th>
+                    <th>Dịch vụ</th>
+                    <th>Đ.Giá</th>
+                    <th>SL</th>
+                    <th>T.Tiền</th>
+                    <th class="no-print" style="width: 50px;"></th>
+                </tr>
+            </thead>
+            <tbody id="quote-items">
+                <!-- Data will be rendered here -->
+            </tbody>
+        </table>
+
+        <div class="total-box">
+            <div>Tổng: <span id="total-amount">0</span></div>
+            <div class="grand-total">Số tiền cần thanh toán: <span id="grand-total">0</span></div>
+        </div>
+
+        <div class="footer-flex">
+            <div class="bank-info">
+                <p><strong>Tài khoản ngân hàng</strong></p>
+                <p class="info-p">Tên: <span class="editable" contenteditable="true" id="bank-name">QUAN TUAN ANH</span>
+                </p>
+                <p class="info-p">STK: <span class="editable" contenteditable="true" id="bank-number">8862848888</span>
+                </p>
+                <p class="info-p">Ngân hàng: <span class="editable" contenteditable="true" id="bank-branch">BIDV</span>
+                </p>
+            </div>
+            <img src="qr.png" alt="QR Code Thanh Toán" class="qr-image">
+        </div>
+
+        <div style="text-align: center; font-size: 10px; color: #888; margin-top: 30px;">
+            ©Cung thể thao tổng hợp Quần Ngựa
+        </div>
+    </div>
+
+    <script>
+        // Modal Logic
+        const modal = document.getElementById("myModal");
+        let editingIndex = -1; // Track which item is being edited
+
+        function openModal() {
+            modal.style.display = "flex";
+            if (editingIndex === -1) {
+                document.querySelector('#myModal h3').innerText = "Thêm Dịch Vụ";
+                document.querySelector('.btn-group .btn:last-child').innerText = "Lưu";
+            } else {
+                document.querySelector('#myModal h3').innerText = "Cập Nhật Dịch Vụ";
+                document.querySelector('.btn-group .btn:last-child').innerText = "Cập nhật";
+            }
+        }
+
+        function closeModal() {
+            modal.style.display = "none";
+            clearForm(); // Reset form on close
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Initial Data mimicking the original HTML
+        let items = [
+            { id: 1, date: '01/01/2025', timeRange: '17h-19h', service: 'Sân 1', price: 200000, quantity: 2 },
+            { id: 2, date: '02/01/2025', timeRange: '17h-19h', service: 'Sân 1', price: 200000, quantity: 2 }
+        ];
+
+        // Load from LocalStorage if available
+        if (localStorage.getItem('quoteItems')) {
+            items = JSON.parse(localStorage.getItem('quoteItems'));
+
+            // Migration for old data (if any) that has 'time' but not 'date'
+            items.forEach(item => {
+                if (item.time && !item.date) {
+                    item.date = item.time;
+                    item.timeRange = ''; // Default empty for migrated items
+                    delete item.time;
+                }
+            });
+        }
+
+        // Load Customer Info
+        if (localStorage.getItem('custName')) document.getElementById('cust-name').innerText = localStorage.getItem('custName');
+        if (localStorage.getItem('custPhone')) document.getElementById('cust-phone').innerText = localStorage.getItem('custPhone');
+
+        // Load Branch Info
+        if (localStorage.getItem('branchName')) document.getElementById('branch-name').innerText = localStorage.getItem('branchName');
+        if (localStorage.getItem('branchPhone')) document.getElementById('branch-phone').innerText = localStorage.getItem('branchPhone');
+        if (localStorage.getItem('branchAddress')) document.getElementById('branch-address').innerText = localStorage.getItem('branchAddress');
+
+        // Load Bank Info
+        if (localStorage.getItem('bankName')) document.getElementById('bank-name').innerText = localStorage.getItem('bankName');
+        if (localStorage.getItem('bankNumber')) document.getElementById('bank-number').innerText = localStorage.getItem('bankNumber');
+        if (localStorage.getItem('bankBranch')) document.getElementById('bank-branch').innerText = localStorage.getItem('bankBranch');
+
+        // Save Customer Info on change
+        document.getElementById('cust-name').addEventListener('input', function () { localStorage.setItem('custName', this.innerText); });
+        document.getElementById('cust-phone').addEventListener('input', function () { localStorage.setItem('custPhone', this.innerText); });
+
+        // Save Branch Info on change
+        document.getElementById('branch-name').addEventListener('input', function () { localStorage.setItem('branchName', this.innerText); });
+        document.getElementById('branch-phone').addEventListener('input', function () { localStorage.setItem('branchPhone', this.innerText); });
+        document.getElementById('branch-address').addEventListener('input', function () { localStorage.setItem('branchAddress', this.innerText); });
+
+        // Save Bank Info on change
+        document.getElementById('bank-name').addEventListener('input', function () { localStorage.setItem('bankName', this.innerText); });
+        document.getElementById('bank-number').addEventListener('input', function () { localStorage.setItem('bankNumber', this.innerText); });
+        document.getElementById('bank-branch').addEventListener('input', function () { localStorage.setItem('bankBranch', this.innerText); });
+
+        // Format Currency: 200000 -> 200.000
+        function formatMoney(amount) {
+            return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+
+        // Format Price for display: 200000 -> 200k
+        function formatPriceDisplay(price) {
+            if (price >= 1000) {
+                return (price / 1000) + 'k';
+            }
+            return price;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('quote-items');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            items.forEach((item, index) => {
+                const rowTotal = item.price * item.quantity;
+                total += rowTotal;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.date} <br> <span style="font-size: 0.9em; color: #666;">${item.timeRange || ''}</span></td>
+                    <td>${item.service}</td>
+                    <td>${formatPriceDisplay(item.price)}</td>
+                    <td>${item.quantity}h</td>
+                    <td>${formatMoney(rowTotal)}</td>
+                    <td class="no-print" style="white-space: nowrap;">
+                        <button class="btn" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="editItem(${index})">Sửa</button>
+                        <button class="btn btn-danger" onclick="deleteItem(${index})">X</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const totalString = formatMoney(total);
+            document.getElementById('total-amount').innerText = totalString;
+            document.getElementById('grand-total').innerText = totalString;
+
+            // Save to LocalStorage
+            localStorage.setItem('quoteItems', JSON.stringify(items));
+        }
+
+        function editItem(index) {
+            editingIndex = index;
+            const item = items[index];
+            document.getElementById('input-date').value = item.date;
+            document.getElementById('input-timerange').value = item.timeRange;
+            document.getElementById('input-service').value = item.service;
+            document.getElementById('input-price').value = item.price;
+            document.getElementById('input-quantity').value = item.quantity;
+            openModal();
+        }
+
+        function upsertItem() {
+            const date = document.getElementById('input-date').value.trim();
+            const timeRange = document.getElementById('input-timerange').value.trim();
+            const service = document.getElementById('input-service').value.trim();
+            const price = parseFloat(document.getElementById('input-price').value);
+            const quantity = parseFloat(document.getElementById('input-quantity').value);
+
+            if (!date || !service || isNaN(price) || isNaN(quantity)) {
+                alert('Vui lòng nhập đầy đủ thông tin (Ngày, Dịch vụ, Giá, Số lượng)!');
+                return;
+            }
+
+            if (editingIndex > -1) {
+                // Update existing item
+                items[editingIndex] = {
+                    ...items[editingIndex],
+                    date: date,
+                    timeRange: timeRange,
+                    service: service,
+                    price: price,
+                    quantity: quantity
+                };
+            } else {
+                // Add new item logic (check duplicates or add new)
+                // Check if item exists (same date, timeRange, service, price)
+                const existingIndex = items.findIndex(item =>
+                    item.date === date &&
+                    item.timeRange === timeRange &&
+                    item.service === service &&
+                    item.price === price
+                );
+
+                if (existingIndex !== -1) {
+                    // Accumulate quantity
+                    items[existingIndex].quantity += quantity;
+                } else {
+                    // Add new item
+                    items.push({
+                        id: Date.now(),
+                        date: date,
+                        timeRange: timeRange,
+                        service: service,
+                        price: price,
+                        quantity: quantity
+                    });
+                }
+            }
+
+            renderTable();
+            closeModal(); // Close modal after adding/updating
+        }
+
+        function deleteItem(index) {
+            if (confirm('Bạn có chắc muốn xóa dòng này?')) {
+                items.splice(index, 1);
+                renderTable();
+            }
+        }
+
+        function clearForm() {
+            editingIndex = -1;
+            document.getElementById('input-date').value = '';
+            document.getElementById('input-timerange').value = '';
+            document.getElementById('input-service').value = 'Sân 1';
+            document.getElementById('input-price').value = '200000';
+            document.getElementById('input-quantity').value = '1';
+            // Reset button text just in case, though openModal handles it
+            document.querySelector('#myModal h3').innerText = "Thêm Dịch Vụ";
+            document.querySelector('.btn-group .btn:last-child').innerText = "Lưu";
+        }
+
+        // Initial Render
+        renderTable();
+    </script>
+</body>
+
+</html>
