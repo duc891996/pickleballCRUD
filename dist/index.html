@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Báo Giá Muse Pickle</title>
+    <title>Bảng Báo Giá Pickle</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -345,13 +345,24 @@
     <script>
         // Modal Logic
         const modal = document.getElementById("myModal");
+        let editingIndex = -1; // Track which item is being edited
+
         function openModal() {
             modal.style.display = "flex";
-            // Pre-fill date with today if empty? Or just leave as is.
+            if (editingIndex === -1) {
+                document.querySelector('#myModal h3').innerText = "Thêm Dịch Vụ";
+                document.querySelector('.btn-group .btn:last-child').innerText = "Lưu";
+            } else {
+                document.querySelector('#myModal h3').innerText = "Cập Nhật Dịch Vụ";
+                document.querySelector('.btn-group .btn:last-child').innerText = "Cập nhật";
+            }
         }
+
         function closeModal() {
             modal.style.display = "none";
+            clearForm(); // Reset form on close
         }
+
         // Close modal when clicking outside
         window.onclick = function (event) {
             if (event.target == modal) {
@@ -436,7 +447,8 @@
                     <td>${formatPriceDisplay(item.price)}</td>
                     <td>${item.quantity}h</td>
                     <td>${formatMoney(rowTotal)}</td>
-                    <td class="no-print">
+                    <td class="no-print" style="white-space: nowrap;">
+                        <button class="btn" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="editItem(${index})">Sửa</button>
                         <button class="btn btn-danger" onclick="deleteItem(${index})">X</button>
                     </td>
                 `;
@@ -451,6 +463,17 @@
             localStorage.setItem('quoteItems', JSON.stringify(items));
         }
 
+        function editItem(index) {
+            editingIndex = index;
+            const item = items[index];
+            document.getElementById('input-date').value = item.date;
+            document.getElementById('input-timerange').value = item.timeRange;
+            document.getElementById('input-service').value = item.service;
+            document.getElementById('input-price').value = item.price;
+            document.getElementById('input-quantity').value = item.quantity;
+            openModal();
+        }
+
         function upsertItem() {
             const date = document.getElementById('input-date').value.trim();
             const timeRange = document.getElementById('input-timerange').value.trim();
@@ -463,32 +486,44 @@
                 return;
             }
 
-            // Check if item exists (same date, timeRange, service, price)
-            const existingIndex = items.findIndex(item =>
-                item.date === date &&
-                item.timeRange === timeRange &&
-                item.service === service &&
-                item.price === price
-            );
-
-            if (existingIndex !== -1) {
-                // Accumulate quantity
-                items[existingIndex].quantity += quantity;
-            } else {
-                // Add new item
-                items.push({
-                    id: Date.now(),
+            if (editingIndex > -1) {
+                // Update existing item
+                items[editingIndex] = {
+                    ...items[editingIndex],
                     date: date,
                     timeRange: timeRange,
                     service: service,
                     price: price,
                     quantity: quantity
-                });
+                };
+            } else {
+                // Add new item logic (check duplicates or add new)
+                // Check if item exists (same date, timeRange, service, price)
+                const existingIndex = items.findIndex(item =>
+                    item.date === date &&
+                    item.timeRange === timeRange &&
+                    item.service === service &&
+                    item.price === price
+                );
+
+                if (existingIndex !== -1) {
+                    // Accumulate quantity
+                    items[existingIndex].quantity += quantity;
+                } else {
+                    // Add new item
+                    items.push({
+                        id: Date.now(),
+                        date: date,
+                        timeRange: timeRange,
+                        service: service,
+                        price: price,
+                        quantity: quantity
+                    });
+                }
             }
 
             renderTable();
-            document.getElementById('input-quantity').value = '';
-            closeModal(); // Close modal after adding
+            closeModal(); // Close modal after adding/updating
         }
 
         function deleteItem(index) {
@@ -499,11 +534,15 @@
         }
 
         function clearForm() {
+            editingIndex = -1;
             document.getElementById('input-date').value = '';
             document.getElementById('input-timerange').value = '';
             document.getElementById('input-service').value = 'Sân 1';
             document.getElementById('input-price').value = '200000';
             document.getElementById('input-quantity').value = '1';
+            // Reset button text just in case, though openModal handles it
+            document.querySelector('#myModal h3').innerText = "Thêm Dịch Vụ";
+            document.querySelector('.btn-group .btn:last-child').innerText = "Lưu";
         }
 
         // Initial Render
