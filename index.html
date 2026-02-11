@@ -371,10 +371,7 @@
         }
 
         // Initial Data mimicking the original HTML
-        let items = [
-            { id: 1, date: '01/01/2025', timeRange: '17h-19h', service: 'Sân 1', price: 200000, quantity: 2 },
-            { id: 2, date: '02/01/2025', timeRange: '17h-19h', service: 'Sân 1', price: 200000, quantity: 2 }
-        ];
+        let items = [];
 
         // Load from LocalStorage if available
         if (localStorage.getItem('quoteItems')) {
